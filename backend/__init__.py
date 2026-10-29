@@ -1,0 +1,1 @@
+# ClipScout Backend Package
