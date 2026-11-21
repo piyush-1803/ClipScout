@@ -237,8 +237,39 @@ async def analyze_video(
             segments = req.segments
 
             if not segments:
+                progress_queue = asyncio.Queue()
+
+                def _scout_progress_cb(curr: int, total: int, msg: str):
+                    pct = round(2.0 + (curr / max(1, total)) * 14.0, 1)
+                    progress_queue.put_nowait((pct, msg))
+
+                async def _do_fetch():
+                    try:
+                        return await fetch_transcript(video_id, progress_callback=_scout_progress_cb)
+                    finally:
+                        progress_queue.put_nowait(None)
+
+                fetch_task = asyncio.create_task(_do_fetch())
+
+                while not fetch_task.done():
+                    try:
+                        item = await asyncio.wait_for(progress_queue.get(), timeout=0.25)
+                        if item is None:
+                            break
+                        pct, msg = item
+                        yield f"data: {json.dumps({'stage': 'fetching', 'progress': pct, 'message': msg})}\n\n"
+                    except asyncio.TimeoutError:
+                        pass
+
+                # Drain remaining events
+                while not progress_queue.empty():
+                    item = progress_queue.get_nowait()
+                    if item:
+                        pct, msg = item
+                        yield f"data: {json.dumps({'stage': 'fetching', 'progress': pct, 'message': msg})}\n\n"
+
                 try:
-                    segments = await fetch_transcript(video_id)
+                    segments = await fetch_task
                 except Exception as te:
                     err_text = mask_all_keys(mask_api_key(str(te), x_api_key))
                     yield f"data: {json.dumps({'stage': 'error', 'progress': 0, 'message': 'Transcript unavailable', 'error': err_text})}\n\n"

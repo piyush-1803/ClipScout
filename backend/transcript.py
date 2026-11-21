@@ -201,8 +201,11 @@ def _fetch_with_yt_dlp_subtitles(video_id: str) -> List[TranscriptSegment]:
 
     raise ValueError("Could not parse subtitles from yt-dlp.")
 
-async def fetch_transcript(video_id: str) -> List[TranscriptSegment]:
-    """Fetches transcript with primary youtube-transcript-api and fallback to yt-dlp."""
+async def fetch_transcript(
+    video_id: str,
+    progress_callback: Optional[Any] = None
+) -> List[TranscriptSegment]:
+    """Fetches transcript with primary youtube-transcript-api and fallback to yt-dlp / stream scout."""
     loop = asyncio.get_event_loop()
     
     # 1. Primary
@@ -224,7 +227,11 @@ async def fetch_transcript(video_id: str) -> List[TranscriptSegment]:
     # 3. Fallback for Ended Live Streams / Missing Captions: Scout Heatmap Peaks + Local Faster-Whisper
     try:
         from .stream_scout import scout_ended_stream_transcripts
-        segments = await scout_ended_stream_transcripts(video_id, max_candidates=8)
+        segments = await scout_ended_stream_transcripts(
+            video_id=video_id,
+            max_candidates=4,
+            progress_callback=progress_callback
+        )
         if segments:
             return segments
     except Exception as e_stream:

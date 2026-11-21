@@ -20,8 +20,8 @@ from .render.transcribe import transcribe_audio_words
 
 def discover_stream_candidate_ranges(
     info: Dict[str, Any],
-    max_candidates: int = 10,
-    window_duration: float = 60.0
+    max_candidates: int = 4,
+    window_duration: float = 35.0
 ) -> List[Tuple[float, float, str]]:
     """
     Finds the highest retention peaks from YouTube audience replay heatmap
@@ -77,10 +77,11 @@ def discover_stream_candidate_ranges(
 
 
 def download_audio_slice(video_id: str, start: float, end: float, out_path: str) -> bool:
-    """Downloads only a specific start-to-end audio slice using yt-dlp download_ranges."""
+    """Downloads only a specific start-to-end audio slice using fast HTTPS chunk streams."""
     url = f"https://www.youtube.com/watch?v={video_id}"
+    # Prefer low-bitrate direct HTTPS streams (fastest download, never crashes FFmpeg HLS)
     ydl_opts = {
-        'format': 'bestaudio[ext=m4a]/bestaudio/best',
+        'format': 'ba[protocol^=http][abr<=96]/ba[protocol^=http]/ba[abr<=96]/bestaudio[ext=m4a]/bestaudio/best',
         'download_ranges': yt_dlp.utils.download_range_func(None, [(start, end)]),
         'outtmpl': out_path,
         'quiet': True,
@@ -104,7 +105,8 @@ def download_audio_slice(video_id: str, start: float, end: float, out_path: str)
 def process_stream_slices_sync(
     video_id: str,
     candidate_ranges: List[Tuple[float, float, str]],
-    model_size: str = "base"
+    model_size: str = "base",
+    progress_callback: Optional[Any] = None
 ) -> List[TranscriptSegment]:
     """
     Downloads each candidate audio slice, transcribes it locally via Faster-Whisper,
@@ -112,13 +114,20 @@ def process_stream_slices_sync(
     """
     segments: List[TranscriptSegment] = []
     temp_dir = tempfile.mkdtemp(prefix="clipscout_stream_")
+    total = len(candidate_ranges)
 
     try:
         for idx, (start_sec, end_sec, label) in enumerate(candidate_ranges):
+            if progress_callback:
+                progress_callback(idx + 1, total, f"Scouting audience peak {idx + 1}/{total} ({int(start_sec)}s-{int(end_sec)}s)...")
+
             slice_filename = os.path.join(temp_dir, f"slice_{idx}_{int(start_sec)}.m4a")
             ok = download_audio_slice(video_id, start_sec, end_sec, slice_filename)
             if not ok or not os.path.exists(slice_filename):
                 continue
+
+            if progress_callback:
+                progress_callback(idx + 1, total, f"Transcribing peak {idx + 1}/{total} locally via Faster-Whisper...")
 
             try:
                 words, sentences, detected_lang = transcribe_audio_words(
@@ -164,7 +173,8 @@ def process_stream_slices_sync(
 async def scout_ended_stream_transcripts(
     video_id: str,
     info: Optional[Dict[str, Any]] = None,
-    max_candidates: int = 10
+    max_candidates: int = 4,
+    progress_callback: Optional[Any] = None
 ) -> List[TranscriptSegment]:
     """
     Asynchronously scouts an ended live stream or missing-caption video,
@@ -188,6 +198,7 @@ async def scout_ended_stream_transcripts(
         process_stream_slices_sync,
         video_id,
         candidate_ranges,
-        "base"
+        "base",
+        progress_callback
     )
     return segments
