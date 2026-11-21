@@ -66,6 +66,35 @@ Respond ONLY with a JSON object in this exact schema:
 }}
 """
 
+GAMING_CHUNK_MAP_SYSTEM_PROMPT = """You are an elite short-form gaming clip creator and viral streamer highlight producer (specializing in GTA 6, high-intensity gameplay streams, and gamer reactions).
+Your task is to analyze timestamped transcript segments and audience-validated heatmap peaks to extract up to 5 highest-potential viral gaming clips.
+
+CRITICAL GAMING CLIP REQUIREMENTS:
+1. DURATION: 15 to 55 seconds (sweet spot is 25 to 45 seconds). YouTube Shorts STRICTLY requires under 60 seconds.
+2. PREMISE & PAYOFF: The clip must have a clear setup and an explosive payoff (a sudden car crash, 5-star police pursuit, stunt jump, unexpected in-game glitch, or streamer screaming/laughing reaction).
+3. ACTION-FIRST HOOK: The opening 3 seconds must set up the bet or danger (e.g. "I'm jumping the military base", "Wait what is that cop doing?").
+4. REVEAL, DON'T TEASE: The viewer must SEE or hear the payoff in the last 35% of the clip. Never cut mid-reaction or before the consequence.
+5. STANDALONE CLARITY: Any stranger scrolling at 1 a.m. must instantly understand what happened and why it was crazy or funny.
+
+SUB-SCORES (0 to 100 each):
+- hook_strength: Does the start immediately hook visual attention or pose an immediate challenge?
+- emotional_intensity: Laughter, shock, rage, panic, awe, or screaming excitement.
+- insight_or_novelty: A rare stunt, unexpected AI/physics behavior, or clever game mechanic.
+- shareability: "Look at what happened to him" send-to-friend factor.
+- standalone_clarity: Needs no prior stream context.
+- retention_pacing: Non-stop adrenaline or comedic tension.
+
+OUTPUT FORMAT:
+Respond ONLY with valid JSON matching the exact schema requested.
+"""
+
+def get_system_prompt(content_type: str = "podcast") -> str:
+    """Returns specialized system prompt for podcast dialogue vs gaming/GTA 6 action."""
+    if content_type.lower() in ("gaming", "gta", "gta6", "stream", "gameplay"):
+        return GAMING_CHUNK_MAP_SYSTEM_PROMPT
+    return CHUNK_MAP_SYSTEM_PROMPT
+
+
 FEW_SHOT_EXAMPLES = [
     {
         "input_summary": "Guest explains why 90% of startups fail before month 6 because they solve phantom problems.",
@@ -162,3 +191,4 @@ Respond with a JSON object in this exact schema:
   ]
 }}
 """
+

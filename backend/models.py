@@ -60,6 +60,8 @@ class VideoMetadata(BaseModel):
     duration_formatted: str
     thumbnail_url: Optional[str] = None
     heatmap: Optional[List[Dict[str, float]]] = None
+    was_live: bool = False
+    is_live: bool = False
 
 class SubScores(BaseModel):
     hook_strength: float = Field(default=50.0, ge=0.0, le=100.0)
@@ -114,6 +116,7 @@ class AnalyzeRequest(BaseModel):
     url: str
     segments: Optional[List[TranscriptSegment]] = None
     output_language: Optional[str] = "same as transcript"
+    content_type: str = "podcast"  # "podcast" | "gaming"
     target_clips: int = Field(default=10, ge=1, le=25)
     model: str = "auto"
     provider: str = "gemini"  # "gemini" or "openai_compat"
@@ -192,6 +195,7 @@ class StudioRenderRequest(BaseModel):
     seo_metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
     caption_style: str = "creator_classic"  # "creator_classic" | "active_word_pop" | "clean_outline"
     language: str = "auto"                  # "auto" | "en" | "hinglish" | "hi"
+    layout: str = "auto"                    # "auto" | "stacked" | "fit"
     quality_preset: str = "final"           # "preview" | "final"
     dynamic_zoom: bool = True
     credit_overlay: bool = True

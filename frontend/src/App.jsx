@@ -59,6 +59,7 @@ export default function App() {
   });
   const [targetClips, setTargetClips] = useState(10);
   const [language, setLanguage] = useState('same as transcript');
+  const [contentType, setContentType] = useState('podcast'); // 'podcast' | 'gaming'
 
   // Input & analysis state
   const [videoUrl, setVideoUrl] = useState('');
@@ -184,6 +185,7 @@ export default function App() {
           url: videoUrl.trim(),
           segments: customSegments || manualTranscriptData,
           output_language: language,
+          content_type: contentType,
           target_clips: targetClips,
           model: model.trim(),
           provider: provider,
@@ -388,6 +390,7 @@ export default function App() {
           } : {},
           caption_style: options.caption_style || 'creator_classic',
           language: options.language || 'auto',
+          layout: options.layout || 'auto',
           quality_preset: options.quality_preset || 'final',
           dynamic_zoom: options.dynamic_zoom !== undefined ? options.dynamic_zoom : true,
           credit_overlay: options.credit_overlay !== undefined ? options.credit_overlay : true,
@@ -742,9 +745,35 @@ export default function App() {
             Paste a link to identify the highest-retention clips, auto-edit them into 9:16 vertical format with dynamic captions, sound effects, and YouTube Fair Use compliance.
           </p>
 
+          {/* Content Mode Selector */}
+          <div className="mt-5 flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setContentType('podcast')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                contentType === 'podcast'
+                  ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-sm'
+                  : 'bg-neutral-200/60 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+              }`}
+            >
+              <span>🎙️ Podcast &amp; Dialogue</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setContentType('gaming')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                contentType === 'gaming'
+                  ? 'bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-sm'
+                  : 'bg-neutral-200/60 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+              }`}
+            >
+              <span>🎮 Gaming &amp; GTA 6 Live Action</span>
+            </button>
+          </div>
+
           {/* Search Bar Container */}
           <div
-            className="mt-6 flex flex-col sm:flex-row items-center gap-2.5 max-w-xl mx-auto"
+            className="mt-3 flex flex-col sm:flex-row items-center gap-2.5 max-w-xl mx-auto"
           >
             <div className="relative w-full">
               <input

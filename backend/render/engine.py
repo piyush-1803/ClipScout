@@ -268,6 +268,7 @@ class RenderJob:
     output_dir: str
     caption_style: str = "creator_classic"  # "creator_classic" | "active_word_pop" | "clean_outline"
     language: str = "auto"                  # "auto" | "en" | "hinglish" | "hi"
+    layout: str = "auto"                    # "auto" | "stacked" | "fit"
     quality_preset: str = "final"           # "preview" | "final"
     dynamic_zoom: bool = True
     credit_overlay: bool = True
@@ -432,6 +433,15 @@ class RenderEngine:
             enable_dynamic_zoom=job.dynamic_zoom,
             sentence_boundaries=sentence_ends
         )
+
+        # Apply layout override (e.g. Stacked Streamer for GTA 6 / gaming)
+        req_layout = getattr(job, "layout", "auto")
+        if req_layout == "stacked":
+            for s in shots:
+                s.layout = "stacked"
+        elif req_layout == "fit":
+            for s in shots:
+                s.layout = "fit"
 
         # Save shots.json
         with open(shots_json, "w", encoding="utf-8") as f:

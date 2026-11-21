@@ -58,6 +58,9 @@ async def fetch_video_metadata(video_id: str) -> VideoMetadata:
                         "value": round(float(pt["value"]), 3)
                     })
 
+        was_live = bool(info.get("was_live") or info.get("live_status") == "was_live")
+        is_live = bool(info.get("is_live") or info.get("live_status") == "is_live")
+
         return VideoMetadata(
             video_id=video_id,
             title=title,
@@ -65,7 +68,9 @@ async def fetch_video_metadata(video_id: str) -> VideoMetadata:
             duration=duration,
             duration_formatted=format_timestamp(duration),
             thumbnail_url=thumbnail_url,
-            heatmap=heatmap
+            heatmap=heatmap,
+            was_live=was_live,
+            is_live=is_live
         )
     except Exception:
         # Fallback to YouTube oEmbed API
@@ -208,12 +213,21 @@ async def fetch_transcript(video_id: str) -> List[TranscriptSegment]:
     except Exception as e_primary:
         pass
 
-    # 2. Fallback
+    # 2. Fallback to yt-dlp subtitles
     try:
         segments = await loop.run_in_executor(None, _fetch_with_yt_dlp_subtitles, video_id)
         if segments:
             return segments
     except Exception as e_fallback:
+        pass
+
+    # 3. Fallback for Ended Live Streams / Missing Captions: Scout Heatmap Peaks + Local Faster-Whisper
+    try:
+        from .stream_scout import scout_ended_stream_transcripts
+        segments = await scout_ended_stream_transcripts(video_id, max_candidates=8)
+        if segments:
+            return segments
+    except Exception as e_stream:
         pass
 
     raise ValueError(

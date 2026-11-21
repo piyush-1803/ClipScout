@@ -35,6 +35,14 @@ def render_reframed_video(
                 f"[0:v]crop={c['w']}:{c['h']}:{c['x']}:{c['y']},"
                 f"scale=1080:1920:flags=lanczos,setsar=1[v]"
             )
+        elif shot.layout == "stacked":
+            c = shot.crop
+            vfilter = (
+                f"[0:v]crop={c['w']}:{c['h']}:{c['x']}:{c['y']},"
+                f"scale=1080:730:force_original_aspect_ratio=increase,crop=1080:730[top];"
+                f"[0:v]scale=1080:1190:force_original_aspect_ratio=increase,crop=1080:1190[bot];"
+                f"[top][bot]vstack,setsar=1[v]"
+            )
         else:
             vfilter = (
                 "[0:v]scale=270:480:force_original_aspect_ratio=increase,crop=270:480,boxblur=6:6,scale=1080:1920:flags=fast_bilinear[bg];"
@@ -74,6 +82,18 @@ def render_reframed_video(
                 f"[0:v]trim=start={s.start_time}:end={s.end_time},setpts=PTS-STARTPTS,"
                 f"crop={c['w']}:{c['h']}:{c['x']}:{c['y']},"
                 f"scale=1080:1920:flags=lanczos,setsar=1[{v_label}]"
+            )
+        elif s.layout == "stacked":
+            c = s.crop
+            top_label = f"top{idx}"
+            bot_label = f"bot{idx}"
+            filter_parts.append(
+                f"[0:v]trim=start={s.start_time}:end={s.end_time},setpts=PTS-STARTPTS,"
+                f"crop={c['w']}:{c['h']}:{c['x']}:{c['y']},"
+                f"scale=1080:730:force_original_aspect_ratio=increase,crop=1080:730[{top_label}];"
+                f"[0:v]trim=start={s.start_time}:end={s.end_time},setpts=PTS-STARTPTS,"
+                f"scale=1080:1190:force_original_aspect_ratio=increase,crop=1080:1190[{bot_label}];"
+                f"[{top_label}][{bot_label}]vstack,setsar=1[{v_label}]"
             )
         else:
             bg_label = f"bg{idx}"

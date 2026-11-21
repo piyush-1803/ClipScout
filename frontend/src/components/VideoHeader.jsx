@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Video, User, ExternalLink, Flame, Activity } from 'lucide-react';
+import { Clock, Video, User, ExternalLink, Flame, Activity, Radio } from 'lucide-react';
 
 export default function VideoHeader({ video, totalClips, clips = [] }) {
   if (!video) return null;
@@ -58,6 +58,13 @@ export default function VideoHeader({ video, totalClips, clips = [] }) {
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/30">
                 <Flame className="w-3 h-3" />
                 <span>Audience Replay Heatmap Boost Active</span>
+              </span>
+            )}
+
+            {video.was_live && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/30">
+                <Radio className="w-3 h-3" />
+                <span>Ended Live Stream VOD</span>
               </span>
             )}
 

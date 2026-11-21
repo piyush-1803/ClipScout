@@ -217,7 +217,11 @@ async def analyze_video(
 
     # Free tier Gemini has a strict 15 RPM limit; 1 worker prevents burst 429 throttling
     concurrency = 1 if (req.provider or "gemini").lower() == "gemini" else 2
-    pipeline = AnalysisPipeline(provider=provider, max_concurrency=concurrency)
+    pipeline = AnalysisPipeline(
+        provider=provider,
+        max_concurrency=concurrency,
+        content_type=getattr(req, "content_type", "podcast")
+    )
 
     async def event_generator():
         try:
@@ -554,6 +558,7 @@ async def create_render_job(req: StudioRenderRequest):
         seo_metadata=req.seo_metadata or {},
         caption_style=req.caption_style,
         language=req.language,
+        layout=getattr(req, "layout", "auto"),
         quality_preset=req.quality_preset,
         dynamic_zoom=req.dynamic_zoom,
         credit_overlay=req.credit_overlay,

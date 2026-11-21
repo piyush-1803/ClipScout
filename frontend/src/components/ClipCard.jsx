@@ -39,6 +39,7 @@ export default function ClipCard({
   // Render Studio Customization Options
   const [captionStyle, setCaptionStyle] = useState('creator_classic');
   const [renderLang, setRenderLang] = useState('auto');
+  const [layout, setLayout] = useState('auto');
   const [qualityPreset, setQualityPreset] = useState('final');
   const [dynamicZoom, setDynamicZoom] = useState(true);
   const [creditOverlay, setCreditOverlay] = useState(true);
@@ -55,6 +56,7 @@ export default function ClipCard({
       onRenderShort(clip, {
         caption_style: captionStyle,
         language: renderLang,
+        layout: layout,
         quality_preset: qualityPreset,
         dynamic_zoom: dynamicZoom,
         credit_overlay: creditOverlay,
@@ -256,6 +258,22 @@ export default function ClipCard({
                   <option value="en">English (Roman)</option>
                   <option value="hinglish">Hinglish (Hindi spoken in Roman letters)</option>
                   <option value="hi">Hindi (Devanagari script)</option>
+                </select>
+              </div>
+
+              {/* Framing Layout */}
+              <div>
+                <label className="block text-[11px] font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                  9:16 Framing &amp; Layout Mode
+                </label>
+                <select
+                  value={layout}
+                  onChange={(e) => setLayout(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-xs text-neutral-800 dark:text-neutral-200 focus:outline-none"
+                >
+                  <option value="auto">Auto Speaker (YuNet Face Centering &amp; Hard Cuts)</option>
+                  <option value="stacked">🎮 Stacked Streamer (Webcam Top 38% + Game Bottom 62%)</option>
+                  <option value="fit">Fit Full Video (Centered on Blurred 9:16 Canvas)</option>
                 </select>
               </div>
 

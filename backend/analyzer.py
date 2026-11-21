@@ -23,6 +23,7 @@ from .prompts import (
     CHUNK_MAP_USER_PROMPT_TEMPLATE,
     REDUCE_CALIBRATION_SYSTEM_PROMPT,
     REDUCE_CALIBRATION_USER_PROMPT,
+    get_system_prompt,
 )
 
 # In-memory results cache: key -> List[ClipCandidate]
@@ -64,11 +65,12 @@ def compute_replay_metrics(heatmap: Optional[List[Dict[str, float]]], start: flo
     return peak, mean
 
 class AnalysisPipeline:
-    def __init__(self, provider: LLMProvider, max_concurrency: int = 2):
+    def __init__(self, provider: LLMProvider, max_concurrency: int = 2, content_type: str = "podcast"):
         self.provider = provider
         self.semaphore = asyncio.Semaphore(max_concurrency)
         self.cancel_requested = False
         self.last_errors: List[str] = []
+        self.content_type = content_type
 
     def cancel(self):
         self.cancel_requested = True
@@ -106,7 +108,7 @@ class AnalysisPipeline:
 
             try:
                 data = await self.provider.generate_json(
-                    system_prompt=CHUNK_MAP_SYSTEM_PROMPT,
+                    system_prompt=get_system_prompt(self.content_type),
                     user_prompt=user_prompt
                 )
             except Exception as e:
